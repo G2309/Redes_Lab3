@@ -18,11 +18,10 @@ class Node:
         for i in self.neighbors.values():
 
             message = json.dumps({"source": self.id, 
-                                  "port": self.port,
-                                  "neigbors": self.neighbors,
-                                  "ttl": 50,
+                                  "neighbors": self.neighbors,
+                                  "ttl": len(self.db.values()) -1,
                                   "seq": self.seq_counter +1,
-                                  "mesassage_type": "LSA" })
+                                  "message_type": "LSA" })
             
     def send_hello_message(self):
         for i in self.neighbors.values():
@@ -30,7 +29,7 @@ class Node:
             message = json.dumps({"source": self.id, 
                                   "port": self.port,
                                   "cost": self.neighbors[i]["cost"],
-                                  "mesassage_type": "Hello" })
+                                  "message_type": "Hello" })
             
     def send_to_other_node(self, destination):
         #Destination: el nodo al que vamos a enviar el mensaje
@@ -38,8 +37,8 @@ class Node:
 
     def handle_message(self, message):
         #Si recibimos un hello, añadimos al vecino
-        if message["mesagge_type"] == "Hello":
-            self.add_neighbors[message["source"]] = {"cost": message["cost"], "port": message["port"] }
+        if message["message_type"] == "Hello":
+            self.neighbors[message["source"]] = {"cost": message["cost"], "port": message["port"] }
 
         else: #si un paquete LSA de otro nodo
             pass
