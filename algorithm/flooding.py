@@ -15,11 +15,20 @@ class Flooding:
         packet_id = packet.get("from") + ":" + str(packet.get("ttl"))
 
         if packet_id in self.received_packets:
-          print(f"")
+          print(f"Duplicated package received, descrting: {packet_id}")
           return
 
         self.received_packets.add(packet_id)
-        print(f"")
+        print(f"[{self.node_id}] Package received from {packet.get('from')} with payload: {packet.get('payload')}")
+
+        if packet.get("ttl", 0) > 0:
+          self.forward(packet)
 
     def forward(self, packet):
       packet["ttl"] -= 1
+
+      new_message = json.dumps(packet)
+      print(f"[{self.node_id}] Resending package to neighbors")
+
+      for neighbor in self.neighbors:
+        print(f"[{self.node_id}] Sending to neighbor: {neighbor}")
