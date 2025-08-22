@@ -44,8 +44,13 @@ class NetworkNode:
                     break
                 message = data.decode("utf-8")
                 
+                from_neighbor= None
                 if self.algorithm_logic:
-                    self.algorithm_logic.handle_message(message)
+                    for neighbor_id, (host, port) in self.algorithm_logic.neighbors.items():
+                        if addr[0] == host and addr[1] == port:
+                            from_neighbor = neighbor_id
+                            break
+                    self.algorithm_logic.handle_message(message, from_neighbor)
         except (socket.error, ConnectionResetError):
             pass
         finally:

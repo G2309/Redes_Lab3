@@ -10,13 +10,13 @@ class FloodingNode:
     self.received_packets = set()
     self.lock = threading.Lock()
 
-  def handle_message(self, message):
+  def handle_message(self, message, from_neighbor=None):
     with self.lock:
       packet = json.loads(message)
-      packet_id = packet.get("from") + ":" + str(packet.get("ttl"))
+      packet_id = packet.get("from") + ":" + packet.get("to")
 
       if packet_id in self.received_packets:
-        print(f"Duplicated package received, descrting: {packet_id}")
+        print(f"Duplicated package received, descarting: {packet_id}")
         return
 
       self.received_packets.add(packet_id)
@@ -27,15 +27,19 @@ class FloodingNode:
         return
 
       if packet.get("ttl", 0) > 0:
-        self.forward(packet)
+        self.forward(packet, from_neighbor)
 
-  def forward(self, packet):
+  def forward(self, packet, exclude_neighbor=None):
     packet["ttl"] -= 1
     print(f"[{self.node_id}] Resending package to neighbors")
 
     for neighbor, (host, port) in self.neighbors.items():
+      if neighbor == exclude_neighbor:
+        continue
       self.network.send_message(host, port, packet)
 
   def send_message(self, packet):
+    packet_id = packet.get("from") + ":" + packet.get("to")
+    self.received_packets.add(packet_id)
     print(f"[{self.node_id}] 🚀 Enviando mensaje inicial: {packet}")
-    self.forward(packet)
+    self.forward(packet, exclude_neighbor=None)
