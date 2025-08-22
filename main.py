@@ -1,33 +1,32 @@
-import time
+import sys, json, time
 import threading
 from network.Network import NetworkNode
 from algorithm.Flooding import FloodingNode
 
 if __name__ == "__main__":
-    network_config = {
-        "A": {"port": 5000, "neighbors": {"B": ("localhost", 5001), "C": ("localhost", 5002)}},
-        "B": {"port": 5001, "neighbors": {"A": ("localhost", 5000), "D": ("localhost", 5003)}},
-        "C": {"port": 5002, "neighbors": {"A": ("localhost", 5000), "D": ("localhost", 5003)}},
-        "D": {"port": 5003, "neighbors": {"B": ("localhost", 5001), "C": ("localhost", 5002)}},
-    }
+    node_id = sys.argv[1]
+    topo_file = sys.argv[2]
+    msg_file = sys.argv[3]
 
-    nodes = {}
-    threads = []
+    with open(topo_file) as f:
+        config = json.load(f)["config"]
 
-    for node_id, config in network_config.items():
-        net = NetworkNode(node_id, config["port"])
-        flooding = FloodingNode(node_id, config["neighbors"], net)
-        net.set_algorithm(flooding)
+    node_info = config[node_id]
+    port = node_info["port"]
+    neighbors = node_info["neighbors"]
 
-        nodes[node_id] = flooding
-        thread = threading.Thread(target=net.start)
-        thread.start()
-        threads.append(thread)
+    net = NetworkNode(node_id, port)
+    # CHANGE HERE TO SELECT ALGORTIHM DINAMICALLY
+    algorithm = FloodingNode(node_id, neighbors, net)
+    net.set_algorithm(algorithm)
 
+    net.start()
     time.sleep(2)  # Dar tiempo a que arranquen los servidores
 
-    # Enviar un mensaje desde A hacia D
-    nodes["A"].send_initial_message("D", "¡Hola desde A! ¿Llegas a D?")
+    with open(msg_file) as f:
+        packet = json.load(f)
+    if node_id == packet["from"]: 
+        algorithm.send_message(packet)
 
     try:
         while True:

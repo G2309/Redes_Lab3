@@ -36,14 +36,6 @@ class FloodingNode:
     for neighbor, (host, port) in self.neighbors.items():
       self.network.send_message(host, port, packet)
 
-  def send_initial_message(self, to, payload):
-    packet = {
-            "proto": "flooding",
-            "type": "message",
-            "from": self.node_id,
-            "to": to,
-            "ttl": 5,
-            "headers": [],
-            "payload": payload,
-        }
+  def send_message(self, packet):
+    print(f"[{self.node_id}] 🚀 Enviando mensaje inicial: {packet}")
     self.forward(packet)

@@ -1,0 +1,9 @@
+{
+  "proto": "flooding",
+  "type": "message",
+  "from": "A",
+  "to": "D",
+  "ttl": 5,
+  "headers": [],
+  "payload": "¡Hola desde A! ¿Llegas a D?"
+}

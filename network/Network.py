@@ -25,6 +25,8 @@ class NetworkNode:
         server_socket.bind(("localhost", self.port))
         server_socket.listen()
 
+        print(f"[{self.node_id}] Servidor escuchando en puerto {self.port}")
+
         while self.is_running:
             try:
                 conn, addr = server_socket.accept()
