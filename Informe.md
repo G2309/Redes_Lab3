@@ -28,6 +28,22 @@ Este algoritmo de enrutamiento funciona enviando un paquete desde un nodo a todo
 
 ### Link State Routing
 
+Este algoritmo funciona de esta manera:
+
+- Cada nodo es conciente de sus vecinos al inicio
+- Un nodo envía un paquete LSA, este paquete contiene información sobre sus vecinos
+- Todos los nodos se reenvían los paquetes LSA que reciben para que cada nodo puede formar su propia topología de la red
+- Cuando un nodo ya sabe la topología, aplica Dijkstra y calcula las mejores rutas
+
+- Ventajas: 
+
+  - Cada nodo es conciente de la topología de la red entera.
+  - Más presición en el enrutamiento.
+
+- Desventjas:
+  - Si es una red muy grande el algoritmo Dijktra puede crecer en complejidad.
+  - Consume mucha memoria pues cada nodo debe almacenar que paquetes ha recibido y toda la topología de la red.
+
 ## Pruebas
 
 En este caso para las pruebas se utilizó la siguiente topología:

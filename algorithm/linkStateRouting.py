@@ -24,6 +24,7 @@ class Node:
         self.received_lsa = {}
         self.network = network
         self.ttl = ttl
+        self.routing_table = {}
         print(f"[{self.node_id}] LSR Node inicializado con vecinos: {list(self.neighbors.keys())}")
 
     def send_own_lsa_package(self):
