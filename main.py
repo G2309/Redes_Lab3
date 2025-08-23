@@ -10,6 +10,7 @@ from network.Network import NetworkNode
 from algorithm.Flooding import FloodingNode
 from algorithm.linkStateRouting import Node
 
+
 def send_periodic_lsa(algorithm, interval=10):
     """Función para enviar LSAs periódicamente"""
     while True:
@@ -50,6 +51,10 @@ if __name__ == "__main__":
         lsa_thread = threading.Thread(target=send_periodic_lsa, args=(algorithm, 15))
         lsa_thread.daemon = True
         lsa_thread.start()
+    
+    elif algorithm_type == "dijkstra":
+        from algorithm.dijkstraRouting import DijkstraNode
+        algorithm = DijkstraNode(node_id, neighbors, net)
         
     else:
         print(f"Algoritmo no soportado: {algorithm_type}")
@@ -73,6 +78,10 @@ if __name__ == "__main__":
             payload = packet.get("payload", "")
             print(f"[{node_id}] Iniciando envío de mensaje a {destination}")
             time.sleep(2)  # Esperar un poco más para que se establezcan las rutas
+            algorithm.send_data_message(destination, payload)
+        elif algorithm_type == "dijkstra":
+            destination = packet["to"]
+            payload = packet.get("payload", "")
             algorithm.send_data_message(destination, payload)
 
     try:
