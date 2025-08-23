@@ -4,12 +4,6 @@ from network.Network import NetworkNode
 from algorithm.Flooding import FloodingNode
 from algorithm.linkStateRouting import Node
 
-import sys, json, time
-import threading
-from network.Network import NetworkNode
-from algorithm.Flooding import FloodingNode
-from algorithm.linkStateRouting import Node
-
 
 def send_periodic_lsa(algorithm, interval=10):
     """Función para enviar LSAs periódicamente"""
@@ -19,6 +13,7 @@ def send_periodic_lsa(algorithm, interval=10):
             algorithm.send_own_lsa_package()
         except Exception as e:
             print(f"Error enviando LSA periódico: {e}")
+
 
 if __name__ == "__main__":
     node_id = sys.argv[1]
@@ -39,7 +34,7 @@ if __name__ == "__main__":
     if algorithm_type == "flooding":
         algorithm = FloodingNode(node_id, neighbors, net)
         
-    elif algorithm_type == "lsr":
+    elif algorithm_type in ("lsr", "dijkstra"):
         algorithm = Node(node_id, neighbors, net)
         # Construir tabla inicial basada en vecinos directos
         algorithm.build_routing_table()
@@ -51,10 +46,6 @@ if __name__ == "__main__":
         lsa_thread = threading.Thread(target=send_periodic_lsa, args=(algorithm, 15))
         lsa_thread.daemon = True
         lsa_thread.start()
-    
-    elif algorithm_type == "dijkstra":
-        from algorithm.dijkstraRouting import DijkstraNode
-        algorithm = DijkstraNode(node_id, neighbors, net)
         
     else:
         print(f"Algoritmo no soportado: {algorithm_type}")
@@ -72,22 +63,17 @@ if __name__ == "__main__":
     if node_id == packet["from"]:
         if algorithm_type == "flooding":
             algorithm.send_message(packet)
-        elif algorithm_type == "lsr":
-            # Para LSR, usar send_data_message
+        elif algorithm_type in ("lsr", "dijkstra"):
             destination = packet["to"]
             payload = packet.get("payload", "")
             print(f"[{node_id}] Iniciando envío de mensaje a {destination}")
             time.sleep(2)  # Esperar un poco más para que se establezcan las rutas
             algorithm.send_data_message(destination, payload)
-        elif algorithm_type == "dijkstra":
-            destination = packet["to"]
-            payload = packet.get("payload", "")
-            algorithm.send_data_message(destination, payload)
 
     try:
         while True:
             # Mostrar estado periódicamente para debug
-            if algorithm_type == "lsr":
+            if algorithm_type in ("lsr", "dijkstra"):
                 time.sleep(20)
                 status = algorithm.get_status()
                 print(f"\n[{node_id}] === Estado actual ===")
@@ -99,3 +85,4 @@ if __name__ == "__main__":
                 time.sleep(1)
     except KeyboardInterrupt:
         print("Programa terminado.")
+

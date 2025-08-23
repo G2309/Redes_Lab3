@@ -12,6 +12,21 @@ En este laboratorio se busca comprender cómo funcionan las tablas de enrutamien
 Loa algoritmos de enrutamiento utilizados fueron los siguientes:
 
 ### Dijsktra
+Este algoritmo se basa en calcular la ruta más corta entre un nodo origen y todos los demás nodos de la red, utilizando la información de costos asociados a cada enlace. El nodo mantiene un grafo de la red y aplica el algoritmo de Dijkstra para determinar cuál es el camino con menor costo acumulado hacia cada destino.
+
+* Ventajas:
+
+  * Siempre encuentra la ruta más corta disponible.
+  * Es eficiente en redes con topologías estáticas o poco cambiantes.
+  * Permite obtener las mejores rutas de manera determinística.
+
+* Desventajas:
+
+  * Necesita que el nodo conozca la topología completa de la red.
+  * Requiere más memoria y procesamiento que otros algoritmos simples.
+  * Si la red cambia con frecuencia, el cálculo debe repetirse, aumentando la carga de cómputo.
+
+---
 
 ### Flooding
 
@@ -75,6 +90,7 @@ Este fue el mensaje que se envió a través de la red:
 [Prueba Flooding.webm](https://github.com/user-attachments/assets/b7e538ca-dee5-4ba6-8a99-dd87fe21c29b)
 
 - Dijstktra:
+[Prueba Dijkstra](https://youtu.be/r7QjurCP-tg)
 
 - Link State Routing:
 
