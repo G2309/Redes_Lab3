@@ -7,18 +7,18 @@ import random
 HOST = 'localhost'
 class Node:
 
-    def __init__(self, id, port, neighbors, network, ttl):
-        self.id = id #Identificador único del nodo
-        self.port = port #El puerto en el que se encuentra nuestro nodo
+    def __init__(self, id, neighbors, network, ttl =10):
+        self.node_id = id #Identificador único del nodo
         self.lsdb  = {}  #la db con los datos de la topología de la red
         self.neighbors = neighbors #siempre queremos inforación de los vecinos inmediatos
+        self.lock = threading.Lock()
         for neighbor_id, (host, port) in neighbors.items():
             self.neighbors[neighbor_id] = {
                 "host": host,
                 "port": port, 
                 "cost": random.randint(1, 10) 
-        }
-        self.lsdb[self.id] = {"neigbors": self.neighbors, "seq": 0}
+            }
+        self.lsdb[self.node_id] = {"neighbors": self.neighbors, "seq": 0}
         self.recived_messages = {} #Aquí guardamos lo que hemos recibido de los demás nodos
         self.seq_counter = -1 #Cada vez que enviemos nuestra información aumentaremos la secuencia
         self.received_lsa = {}
@@ -35,7 +35,7 @@ class Node:
                 "source": self.node_id,
                 "seq": self.seq_counter,
                 "neighbors": self.neighbors,
-                "ttl": self.initial_ttl
+                "ttl": self.ttl
             }
         print(f"[{self.node_id}] Enviando LSA (seq={self.seq_counter}) a vecinos")
             
