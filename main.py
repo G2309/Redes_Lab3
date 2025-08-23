@@ -2,11 +2,13 @@ import sys, json, time
 import threading
 from network.Network import NetworkNode
 from algorithm.Flooding import FloodingNode
+from algorithm.linkStateRouting import Node
 
 if __name__ == "__main__":
     node_id = sys.argv[1]
     topo_file = sys.argv[2]
     msg_file = sys.argv[3]
+    algorithm_type = sys.argv[4]
 
     with open(topo_file) as f:
         config = json.load(f)["config"]
@@ -17,7 +19,13 @@ if __name__ == "__main__":
 
     net = NetworkNode(node_id, port)
     # CHANGE HERE TO SELECT ALGORTIHM DINAMICALLY
-    algorithm = FloodingNode(node_id, neighbors, net)
+    if algorithm_type == "flooding":
+
+        algorithm = FloodingNode(node_id, neighbors, net)
+
+    elif algorithm_type == "lsr":
+        algorithm = Node(node_id, neighbors, net, )
+
     net.set_algorithm(algorithm)
 
     net.start()
