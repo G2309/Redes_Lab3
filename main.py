@@ -4,11 +4,6 @@ from network.Network import NetworkNode
 from algorithm.Flooding import FloodingNode
 from algorithm.linkStateRouting import Node
 
-import sys, json, time
-import threading
-from network.Network import NetworkNode
-from algorithm.Flooding import FloodingNode
-from algorithm.linkStateRouting import Node
 
 def send_periodic_lsa(algorithm, interval=10):
     """Función para enviar LSAs periódicamente"""
@@ -18,6 +13,7 @@ def send_periodic_lsa(algorithm, interval=10):
             algorithm.send_own_lsa_package()
         except Exception as e:
             print(f"Error enviando LSA periódico: {e}")
+
 
 if __name__ == "__main__":
     node_id = sys.argv[1]
@@ -38,7 +34,7 @@ if __name__ == "__main__":
     if algorithm_type == "flooding":
         algorithm = FloodingNode(node_id, neighbors, net)
         
-    elif algorithm_type == "lsr":
+    elif algorithm_type in ("lsr", "dijkstra"):
         algorithm = Node(node_id, neighbors, net)
         # Construir tabla inicial basada en vecinos directos
         algorithm.build_routing_table()
@@ -67,8 +63,7 @@ if __name__ == "__main__":
     if node_id == packet["from"]:
         if algorithm_type == "flooding":
             algorithm.send_message(packet)
-        elif algorithm_type == "lsr":
-            # Para LSR, usar send_data_message
+        elif algorithm_type in ("lsr", "dijkstra"):
             destination = packet["to"]
             payload = packet.get("payload", "")
             print(f"[{node_id}] Iniciando envío de mensaje a {destination}")
@@ -78,7 +73,7 @@ if __name__ == "__main__":
     try:
         while True:
             # Mostrar estado periódicamente para debug
-            if algorithm_type == "lsr":
+            if algorithm_type in ("lsr", "dijkstra"):
                 time.sleep(20)
                 status = algorithm.get_status()
                 print(f"\n[{node_id}] === Estado actual ===")
@@ -90,3 +85,4 @@ if __name__ == "__main__":
                 time.sleep(1)
     except KeyboardInterrupt:
         print("Programa terminado.")
+
