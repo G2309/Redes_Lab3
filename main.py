@@ -27,7 +27,9 @@ async def main():
     neighbors = node_info["neighbors"]
 
     channels = [node_id]
-    net = NetworkNodePubSub(node_id, channels)
+    net = NetworkNodePubSub(node_id, channels, neighbors)
+
+    await net.start()
     
     # Seleccionar algoritmo dinámicamente
     if algorithm_type == "flooding":
