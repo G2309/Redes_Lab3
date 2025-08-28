@@ -12,6 +12,9 @@ class FloodingNode:
   async def handle_message(self, packet):
     packet_id = f"{packet.get('from')}:{packet.get('to')}:{packet.get('payload')}"
 
+    if packet.get('from') == self.node_id:
+      return
+
     if packet_id in self.received_packets:
       print(f"[{self.node_id}] Discarting duplicating package: {packet_id}")
       return
