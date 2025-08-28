@@ -11,110 +11,60 @@ class Node:
         self.node_id = id #Identificador único del nodo
         self.lsdb  = {}  #la db con los datos de la topología de la red
         self.neighbors = neighbors #siempre queremos inforación de los vecinos inmediatos
-        self.lock = threading.Lock()
-        for neighbor_id, (host, port) in neighbors.items():
-            self.neighbors[neighbor_id] = {
-                "host": host,
-                "port": port, 
-                "cost": random.randint(1, 10) 
-            }
-        self.lsdb[self.node_id] = {"neighbors": self.neighbors, "seq": 0}
         self.recived_messages = {} #Aquí guardamos lo que hemos recibido de los demás nodos
         self.seq_counter = -1 #Cada vez que enviemos nuestra información aumentaremos la secuencia
         self.received_lsa = {}
         self.network = network
         self.ttl = ttl
         self.routing_table = {}
-        print(f"[{self.node_id}] LSR Node inicializado con vecinos: {list(self.neighbors.keys())}")
+        print(f"[{self.node_id}] LSR node initialized")
 
-    def send_own_lsa_package(self):
-        with self.lock:
-            self.seq_counter += 1
-            
-            lsa_packet = {
-                "type": "LSA",
-                "source": self.node_id,
-                "seq": self.seq_counter,
-                "neighbors": self.neighbors,
-                "ttl": self.ttl
-            }
-        print(f"[{self.node_id}] Enviando LSA (seq={self.seq_counter}) a vecinos")
-            
-        for neighbor_id, neighbor_info in self.neighbors.items():
-            try:
-                self.network.send_message(
-                    neighbor_info["host"], 
-                    neighbor_info["port"], 
-                    lsa_packet
-                )
-                print(f"[{self.node_id}] --> LSA enviado a {neighbor_id}")
-            except Exception as e:
-                print(f"[{self.node_id}] Error enviando LSA a {neighbor_id}: {e}")
 
-    def handle_message(self, raw_message, from_neighbor=None):
-        with self.lock:
-            try:
-                message = json.loads(raw_message)
-            except json.JSONDecodeError as e:
-                print(f"[{self.node_id}] Error decodificando mensaje: {e}")
-                return
 
-            if message.get("type") == "LSA":
-                self.handle_lsa(message)
-            elif message.get("type") == "DATA":
-                self.handle_data_message(message)
+    async def handle_message(self, packet):
 
-    def handle_lsa(self, lsa):
+        if packet.get('type') == "info":
+            await self.handle_info_message(packet)
+        await self.handle_sending_message(packet)
 
-        source = lsa["source"]
-        seq = lsa["seq"]
-        ttl = lsa["ttl"]
-        
-        # Ignorar nuestros propios LSAs
-        if source == self.node_id:
-            return
-        
-        # Verificar si es un LSA duplicado o viejo
-        if source in self.received_lsa:
-            if seq <= self.received_lsa[source]:
-                print(f"[{self.node_id}] LSA duplicado/viejo de {source} (seq={seq}), descartando")
-                return
-        
-        # Actualizar la base de datos
-        self.received_lsa[source] = seq
-        self.lsdb[source] = {
-            "neighbors": lsa["neighbors"],
-            "seq": seq
-        }
-        
-        print(f"[{self.node_id}] LSA recibido de {source} (seq={seq})")
-        
-        # Reenviar si TTL > 1
-        if ttl > 1:
-            self.forward_lsa(lsa)
-        
-        # Recalcular tabla de rutas
-        self.build_routing_table()
 
-    def forward_lsa(self, original_lsa):
-        """Reenvía LSA a vecinos (excepto al que lo envió)"""
-        forwarded_lsa = copy.deepcopy(original_lsa)
-        forwarded_lsa["ttl"] -= 1  # Decrementar TTL al reenviar
+    async def handle_info_message(self, packet):
         
-        print(f"[{self.node_id}] Reenviando LSA de {original_lsa['source']} (TTL={forwarded_lsa['ttl']})")
-        
-        for neighbor_id, neighbor_info in self.neighbors.items():
-            # No reenviar al nodo que originó el LSA
-            if neighbor_id != original_lsa["source"]:
-                try:
-                    self.network.send_message(
-                        neighbor_info["host"], 
-                        neighbor_info["port"], 
-                        forwarded_lsa
-                    )
-                    print(f"[{self.node_id}] --> LSA reenviado a {neighbor_id}")
-                except Exception as e:
-                    print(f"[{self.node_id}] Error reenviando LSA a {neighbor_id}: {e}")
+        if self.node_id in packet.get('headers'):
+            return #Evitar ciclos
+    
+        print(f"Adding {packet.get('from')} to local db")
+        self.lsbd[packet.get('from')] = packet.get("payload") #Agrgear la info a nuestra bd
+
+        #Ahora verificar si debe ser reenviado
+        if packet.get('ttl') > 0:
+           await self.forward(packet)
+
+    async def send_own_info(self):
+        pass
+
+    async def forward(self, packet):
+        packet = copy.deepcopy(packet)
+        packet["ttl"] -= 1
+        if len(packet["headers"]) == 3:
+            del packet["headers"][0]
+            packet["headers"][2] = self.node_id
+        else:
+            packet["headers"].append(self.node_id)
+
+        for neighbor in self.neighbors:
+            await self.network.publish(neighbor, packet) 
+        print(f"Resending packet to neighbots")
+
+
+
+    async def handle_sending_message(self, packet):
+        if packet.get('to') == self.node_id:
+            print(f"I am the destiny and the message is {packet.get('payload')} ")
+        else: 
+            #Calcular a que nodo enviar
+            pass
+
 
     def build_routing_table(self):
         print(f"[{self.node_id}] Recalculando tabla de rutas...")
