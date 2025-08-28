@@ -1,9 +1,9 @@
 {
   "proto": "flooding",
   "type": "message",
-  "from": "A",
-  "to": "D",
+  "from": "sec20.topologia2.nodo1.prueba1",
+  "to": "sec20.topologia2.nodo1.prueba2",
   "ttl": 5,
   "headers": [],
-  "payload": "¡Hola desde A! ¿Llegas a D?"
+  "payload": "How are you?"
 }

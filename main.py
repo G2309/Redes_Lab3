@@ -59,7 +59,7 @@ async def main():
     if node_id == packet["from"]:
         await asyncio.sleep(2)
         if algorithm_type == "flooding":
-            algorithm.send_message(packet)
+            await algorithm.send_message(packet)
         elif algorithm_type in ("lsr", "dijkstra"):
             destination = packet["to"]
             payload = packet.get("payload", "")
