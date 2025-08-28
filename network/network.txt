@@ -1,11 +1,7 @@
-import os
-from dotenv import load_dotenv
 import asyncio
 import redis.asyncio as redis
 
-load_dotenv()
-
-HOST = "lab3.redesuvg.cloud" 
+HOST = "lab3.redesuvg.cloud"
 PORT = 6379
 PWD  = "UVGRedis2025"
 
@@ -40,4 +36,5 @@ class NetworkNodePubSub:
     async def publish(self, channel, message):
         """Enviar mensaje a un canal"""
         await self.redis.publish(channel, message)
+
 
