@@ -13,6 +13,22 @@ async def send_periodic_lsa(algorithm, interval=10):
         except Exception as e:
             print(f"Error enviando LSA periódico: {e}")
 
+async def user_input_loop(node, algorithm):
+    while True:
+        msg = await asyncio.to_thread(input, "Message: ")
+        dest = await asyncio.to_thread(input, "To: ")
+
+        packet = {
+            "proto": "flooding" if isinstance(algorithm, FloodingNode) else "lsr",
+            "type": "message",
+            "from": node.node_id,
+            "to": dest,
+            "ttl": 5,
+            "headers": [],
+            "payload": msg
+        }
+
+        await algorithm.send_message(packet) if isinstance(algorithm, FloodingNode) else await algorithm.send_data_message(dest, msg)
 
 async def main():
     node_id = sys.argv[1]
@@ -51,21 +67,7 @@ async def main():
 
     net.set_algorithm(algorithm)
 
-    # Leer y procesar el archivo de mensajes
-    with open(msg_file) as f:
-        packet = json.load(f)
-    
-    # Enviar mensaje según el algoritmo
-    if node_id == packet["from"]:
-        await asyncio.sleep(2)
-        if algorithm_type == "flooding":
-            await algorithm.send_message(packet)
-        elif algorithm_type in ("lsr", "dijkstra"):
-            destination = packet["to"]
-            payload = packet.get("payload", "")
-            print(f"[{node_id}] Iniciando envío de mensaje a {destination}")
-            await asyncio.sleep(2)  # Esperar un poco más para que se establezcan las rutas
-            await algorithm.send_data_message(destination, payload)
+    asyncio.create_task(user_input_loop(net, algorithm))
 
     await net.listen()
 
