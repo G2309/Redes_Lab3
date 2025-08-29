@@ -12,7 +12,7 @@ async def send_periodic_lsa(algorithm, interval=10):
         await asyncio.sleep(interval)  
         try:
             if hasattr(algorithm, 'send_own_info'):
-                algorithm.send_own_info()
+                await algorithm.send_own_info()
         except Exception as e:
             print(f"Error enviando LSA periódico: {e}")
 
@@ -41,7 +41,7 @@ async def user_input_loop(net, algorithm):
                 await algorithm.send_message(packet)
             else:
                 # Para LSR y Dijkstra
-                await algorithm.send_data_message(dest, msg)
+                await algorithm.send_message(dest, msg)
                 
         except KeyboardInterrupt:
             print("\nSaliendo...")
@@ -84,7 +84,7 @@ async def main():
         algorithm.build_routing_table()
         
         # Enviar LSA inicial
-        algorithm.send_own_info()
+        await algorithm.send_own_info()
         
         # Programar LSAs periódicos
         asyncio.create_task(send_periodic_lsa(algorithm, 15))
