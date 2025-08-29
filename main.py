@@ -11,8 +11,8 @@ async def send_periodic_lsa(algorithm, interval=10):
     while True:
         await asyncio.sleep(interval)  
         try:
-            if hasattr(algorithm, 'send_own_lsa_package'):
-                algorithm.send_own_lsa_package()
+            if hasattr(algorithm, 'send_own_info'):
+                algorithm.send_own_info()
         except Exception as e:
             print(f"Error enviando LSA periódico: {e}")
 
@@ -84,18 +84,14 @@ async def main():
         algorithm.build_routing_table()
         
         # Enviar LSA inicial
-        algorithm.send_own_lsa_package()
+        algorithm.send_own_info()
         
         # Programar LSAs periódicos
         asyncio.create_task(send_periodic_lsa(algorithm, 15))
         
     elif algorithm_type == "dijkstra":
         algorithm = DijkstraNode(node_id, neighbors, net, config)
-        
-        # Opcional: Para usar protocolo LSR completo, descomenta estas líneas
-        # asyncio.create_task(send_initial_hello(algorithm))
-        # algorithm.send_own_lsa_package() 
-        # asyncio.create_task(send_periodic_lsa(algorithm, 15))
+
         
     else:
         print(f"Algoritmo no soportado: {algorithm_type}")
