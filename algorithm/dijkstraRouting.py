@@ -236,7 +236,7 @@ class DijkstraNode:
         except Exception as e:
             print(f"[{self.node_id}] Error publicando a {next_hop}: {e}")
 
-    async def send_data_message(self, destination, payload):
+    async def send_message(self, destination, payload):
         """
         Construye y envía un paquete de datos: verifica que exista ruta y que next_hop sea vecino.
         """
@@ -274,7 +274,7 @@ class DijkstraNode:
             print(f"[{self.node_id}] Error al publicar paquete a {next_hop}: {e}")
 
     async def send_message(self, packet):
-        await self.send_data_message(packet["to"], packet["payload"])
+        await self.send_message(packet["to"], packet["payload"])
 
     def build_routing_table(self):
         self._recompute_routes()
