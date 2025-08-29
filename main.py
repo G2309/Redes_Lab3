@@ -40,8 +40,17 @@ async def user_input_loop(net, algorithm):
                 }
                 await algorithm.send_message(packet)
             else:
-                # Para LSR y Dijkstra
-                await algorithm.send_message(dest, msg)
+                packet = {
+                    "proto": "lsr",
+                    "type": "message",
+                    "from": net.node_id,
+                    "to": dest,
+                    "ttl": 5,
+                    "headers": [],
+                    "payload": msg
+                }
+
+                await algorithm.send_message(packet)
                 
         except KeyboardInterrupt:
             print("\nSaliendo...")
