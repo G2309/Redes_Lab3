@@ -179,35 +179,67 @@ class DijkstraNode:
                         print(f"[{self.node_id}] Error reenviando INFO a {neighbor}: {e}")
 
     async def _handle_data_message(self, packet):
+        """
+        Recibe un paquete 'message'.
+        - Si el paquete está destinado a este nodo: entregarlo (mostrar payload).
+        - Si no: verificar TTL, headers, existencia de ruta y reenviar al next_hop.
+        """
         dst = packet.get("to")
         src = packet.get("from")
         payload = packet.get("payload", "")
         ttl = packet.get("ttl", 0)
         headers = packet.get("headers", [])
+
+        # Si el paquete es para este nodo: entregarlo (no lo descartes)
         if dst == self.node_id:
+            # entrega local del mensaje
+            print(f"[{self.node_id}] Mensaje recibido de {src}: {payload}")
+            # opcional: podrías enviar ACK o procesar payload aquí
             return
+
+        # Protecciones para reenviar
         if ttl <= 1:
+            print(f"[{self.node_id}] Descarta paquete (TTL agotado) hacia {dst}.")
             return
+
         if self.node_id in headers:
+            print(f"[{self.node_id}] Descarta paquete (ya en headers) hacia {dst}.")
             return
+
+        # Si no existe ruta conocida, registrar y descartar (o intentar flooding/notify)
         if dst not in self.routing_table:
+            print(f"[{self.node_id}] No hay ruta a {dst} — descartando paquete.")
             return
-        next_hop = self.routing_table[dst]["next_hop"]
+
+        next_hop = self.routing_table[dst].get("next_hop")
+        if next_hop is None:
+            print(f"[{self.node_id}] next_hop para {dst} es None — descartando.")
+            return
+
         if next_hop not in self.neighbors_dict:
+            print(f"[{self.node_id}] next_hop {next_hop} no es vecino directo — descartando.")
             return
+
+        # Preparar el reenvío (copia poco profunda está ok aquí)
         new_headers = headers.copy()
         if len(new_headers) >= 3:
             new_headers.pop(0)
         new_headers.append(self.node_id)
+
         forward_packet = packet.copy()
         forward_packet["ttl"] = ttl - 1
         forward_packet["headers"] = new_headers
+
         try:
             await self.network.publish(next_hop, forward_packet)
-        except Exception:
-            pass
+            print(f"[{self.node_id}] Reenviando paquete a {next_hop} para destino {dst} (ttl ahora {forward_packet['ttl']}).")
+        except Exception as e:
+            print(f"[{self.node_id}] Error publicando a {next_hop}: {e}")
 
     async def send_data_message(self, destination, payload):
+        """
+        Construye y envía un paquete de datos: verifica que exista ruta y que next_hop sea vecino.
+        """
         packet = {
             "proto": "lsr",
             "type": "message",
@@ -217,17 +249,29 @@ class DijkstraNode:
             "headers": [self.node_id],
             "payload": payload
         }
+
         if destination == self.node_id:
+            print(f"[{self.node_id}] Intento de enviar mensaje a sí mismo — ignorando.")
             return
+
         if destination not in self.routing_table:
+            print(f"[{self.node_id}] No hay ruta a {destination} — no se envía el mensaje.")
             return
-        next_hop = self.routing_table[destination]["next_hop"]
+
+        next_hop = self.routing_table[destination].get("next_hop")
+        if not next_hop:
+            print(f"[{self.node_id}] next_hop indefinido para {destination} — no se envía.")
+            return
+
         if next_hop not in self.neighbors_dict:
+            print(f"[{self.node_id}] next_hop {next_hop} no es vecino — no se envía.")
             return
+
         try:
             await self.network.publish(next_hop, packet)
-        except Exception:
-            pass
+            print(f"[{self.node_id}] Enviado paquete a {next_hop} para destino {destination}.")
+        except Exception as e:
+            print(f"[{self.node_id}] Error al publicar paquete a {next_hop}: {e}")
 
     async def send_message(self, packet):
         await self.send_data_message(packet["to"], packet["payload"])
